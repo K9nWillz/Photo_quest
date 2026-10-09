@@ -14,18 +14,27 @@ export type EquipmentId =
   | 'none'
   | 'cap'
   | 'shades'
+  | 'monocle'
   | 'tophat'
   | 'bandana'
+  | 'pilot'
   | 'beret'
+  | 'cowboy'
   | 'headset'
   | 'fedora'
+  | 'ninja_cowl'
   | 'helmet'
   | 'visor'
   | 'crown'
   | 'halo'
+  | 'samurai_mask'
   | 'kabuto'
+  | 'cyber_horns'
   | 'spacehelm'
-  | 'valkyrie';
+  | 'tiara'
+  | 'valkyrie'
+  | 'glitch_halo'
+  | 'phoenix_crest';
 
 export type MonsterShape = 'horns' | 'ghost' | 'square' | 'spikes' | 'drip' | 'box' | 'tall';
 
@@ -148,6 +157,7 @@ export interface GemItem {
 
 export type AppScreen =
   | 'welcome'
+  | 'onboarding'
   | 'home'
   | 'scan'
   | 'quest'

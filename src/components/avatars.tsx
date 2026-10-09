@@ -25,19 +25,28 @@ export const AVATAR_OPTIONS: { id: AvatarType; name: string; description: string
 
 export const EQUIPMENT_ITEMS: EquipmentItem[] = [
   { id: 'cap', name: 'Tactical Cap', cost: 100, description: 'Streamlined athletic visor', tier: 'Common' },
+  { id: 'monocle', name: 'Brass Monocle', cost: 110, description: 'Refined optical lens with gold chain', tier: 'Common' },
   { id: 'shades', name: 'Cyber Shades', cost: 120, description: 'Polarized tactical lenses', tier: 'Common' },
   { id: 'tophat', name: 'Vintage Top Hat', cost: 150, description: 'Formal cylindrical headpiece', tier: 'Common' },
+  { id: 'pilot', name: 'Aviator Goggles', cost: 160, description: 'Brass wind goggles with leather strap', tier: 'Rare' },
   { id: 'bandana', name: 'Neon Bandana', cost: 180, description: 'Vibrant wrapped dust protector', tier: 'Rare' },
   { id: 'beret', name: 'Architect Beret', cost: 200, description: 'Minimalist felt artist cap', tier: 'Rare' },
+  { id: 'cowboy', name: 'Ranch Stetson', cost: 220, description: 'Wide-brimmed frontier cattle hat', tier: 'Rare' },
   { id: 'headset', name: 'Studio Headset', cost: 250, description: 'Acoustic monitoring perimeter', tier: 'Rare' },
   { id: 'fedora', name: 'Explorer Fedora', cost: 280, description: 'Field expedition brimmed hat', tier: 'Rare' },
   { id: 'helmet', name: 'Hazard Helmet', cost: 300, description: 'Armored protective shell', tier: 'Epic' },
+  { id: 'ninja_cowl', name: 'Shinobi Cowl', cost: 320, description: 'Shadow silk face guard and cowl', tier: 'Epic' },
   { id: 'visor', name: 'Holo Visor', cost: 350, description: 'Augmented HUD scanning band', tier: 'Epic' },
   { id: 'crown', name: 'Sovereign Crown', cost: 400, description: 'Prismatic aurum sovereign crest', tier: 'Epic' },
+  { id: 'samurai_mask', name: 'Shadow Menpo', cost: 420, description: 'Forged iron facial armor with fangs', tier: 'Epic' },
   { id: 'halo', name: 'Celestial Halo', cost: 450, description: 'Floating luminous solar ring', tier: 'Epic' },
   { id: 'kabuto', name: 'Samurai Kabuto', cost: 500, description: 'Iron horned warrior crest', tier: 'Legendary' },
+  { id: 'cyber_horns', name: 'Cyber Horns', cost: 520, description: 'Bioluminescent neon cybernetic horns', tier: 'Legendary' },
   { id: 'spacehelm', name: 'Astro Dome', cost: 600, description: 'Pressurized orbital bubble', tier: 'Legendary' },
+  { id: 'tiara', name: 'Diamond Tiara', cost: 650, description: 'Faceted crystalline royal circlet', tier: 'Legendary' },
   { id: 'valkyrie', name: 'Valkyrie Crest', cost: 750, description: 'Winged mythical battle adornment', tier: 'Legendary' },
+  { id: 'glitch_halo', name: 'Quantum Halo', cost: 850, description: 'Distorted prismatic floating energy matrix', tier: 'Legendary' },
+  { id: 'phoenix_crest', name: 'Phoenix Crest', cost: 1000, description: 'Immortal flaming solar plumage', tier: 'Legendary' },
 ];
 
 export const Avatar: React.FC<AvatarProps> = ({
@@ -265,6 +274,80 @@ export const Avatar: React.FC<AvatarProps> = ({
             <path d="M26,36 Q8,20 12,8 Q24,18 28,32" fill="#e2e8f0" stroke="#94a3b8" strokeWidth="1.5" />
             <path d="M74,36 Q92,20 88,8 Q76,18 72,32" fill="#e2e8f0" stroke="#94a3b8" strokeWidth="1.5" />
             <polygon points="50,18 42,28 58,28" fill="#38bdf8" />
+          </g>
+        );
+      case 'monocle':
+        return (
+          <g id="eq-monocle">
+            <circle cx="62" cy="48" r="9" fill="#fef08a" opacity="0.3" stroke="#f59e0b" strokeWidth="2.5" />
+            <path d="M71,48 Q78,54 74,68" fill="none" stroke="#d97706" strokeWidth="1.5" strokeDasharray="2,2" />
+          </g>
+        );
+      case 'pilot':
+        return (
+          <g id="eq-pilot">
+            <ellipse cx="38" cy="42" rx="10" ry="7" fill="#38bdf8" opacity="0.8" stroke="#d97706" strokeWidth="2.5" />
+            <ellipse cx="62" cy="42" rx="10" ry="7" fill="#38bdf8" opacity="0.8" stroke="#d97706" strokeWidth="2.5" />
+            <line x1="48" y1="42" x2="52" y2="42" stroke="#78350f" strokeWidth="3" />
+            <path d="M20,42 L28,42" stroke="#78350f" strokeWidth="3" />
+            <path d="M72,42 L80,42" stroke="#78350f" strokeWidth="3" />
+          </g>
+        );
+      case 'cowboy':
+        return (
+          <g id="eq-cowboy">
+            <path d="M16,34 Q50,22 84,34 Q76,38 50,34 Q24,38 16,34 Z" fill="#92400e" />
+            <path d="M34,30 Q38,10 50,14 Q62,10 66,30 Z" fill="#78350f" />
+            <line x1="34" y1="28" x2="66" y2="28" stroke="#f59e0b" strokeWidth="2" />
+          </g>
+        );
+      case 'ninja_cowl':
+        return (
+          <g id="eq-ninja_cowl">
+            <path d="M26,36 Q50,24 74,36 L72,66 Q50,74 28,66 Z" fill="#0f172a" opacity="0.9" />
+            <rect x="34" y="42" width="32" height="10" rx="3" fill="#1e293b" />
+          </g>
+        );
+      case 'samurai_mask':
+        return (
+          <g id="eq-samurai_mask">
+            <path d="M28,52 L72,52 L66,74 Q50,82 34,74 Z" fill="#b91c1c" />
+            <polygon points="42,56 46,64 50,56 54,64 58,56" fill="#fef08a" />
+          </g>
+        );
+      case 'cyber_horns':
+        return (
+          <g id="eq-cyber_horns">
+            <path d="M32,32 Q22,12 18,6 Q28,14 36,28" fill="#ec4899" stroke="#f43f5e" strokeWidth="2" />
+            <path d="M68,32 Q78,12 82,6 Q72,14 64,28" fill="#ec4899" stroke="#f43f5e" strokeWidth="2" />
+            <circle cx="18" cy="6" r="2.5" fill="#fbcfe8" className="animate-ping" />
+            <circle cx="82" cy="6" r="2.5" fill="#fbcfe8" className="animate-ping" />
+          </g>
+        );
+      case 'tiara':
+        return (
+          <g id="eq-tiara">
+            <path d="M30,28 Q50,20 70,28" fill="none" stroke="#e0e7ff" strokeWidth="2" />
+            <polygon points="50,12 44,24 56,24" fill="#67e8f9" stroke="#38bdf8" strokeWidth="1.5" />
+            <polygon points="38,18 34,26 42,26" fill="#a5b4fc" />
+            <polygon points="62,18 58,26 66,26" fill="#a5b4fc" />
+            <circle cx="50" cy="12" r="2" fill="#ffffff" />
+          </g>
+        );
+      case 'glitch_halo':
+        return (
+          <g id="eq-glitch_halo">
+            <ellipse cx="50" cy="14" rx="28" ry="7" fill="none" stroke="#06b6d4" strokeWidth="3" strokeDasharray="8,4" />
+            <ellipse cx="52" cy="13" rx="26" ry="6" fill="none" stroke="#f43f5e" strokeWidth="1.5" strokeDasharray="4,6" opacity="0.8" />
+          </g>
+        );
+      case 'phoenix_crest':
+        return (
+          <g id="eq-phoenix_crest">
+            <path d="M32,30 Q12,12 16,0 Q28,16 34,26" fill="#f97316" stroke="#ea580c" strokeWidth="1.5" />
+            <path d="M68,30 Q88,12 84,0 Q72,16 66,26" fill="#f97316" stroke="#ea580c" strokeWidth="1.5" />
+            <path d="M46,24 Q50,6 50,4 Q54,16 54,24 Z" fill="#ef4444" />
+            <circle cx="50" cy="6" r="2.5" fill="#fef08a" />
           </g>
         );
       case 'none':

@@ -34,8 +34,9 @@ import { LeagueView } from './views/LeagueView';
 import { LockerView } from './views/LockerView';
 import { ProfileView } from './views/ProfileView';
 import { DuelView } from './views/DuelView';
+import { OnboardingGateView } from './views/OnboardingGateView';
 
-const STORAGE_KEY = 'pq.profile.v3';
+const STORAGE_KEY = 'pq.profile.v4';
 
 function getTodayKey(): string {
   return new Date().toISOString().split('T')[0];
@@ -55,55 +56,38 @@ function getMondayKey(): string {
 }
 
 const DEFAULT_PROFILE: UserProfile = {
-  id: 'guest-' + Math.random().toString(36).substring(2, 9),
-  displayName: 'Operator',
+  id: '',
+  displayName: '',
   avatar: 'fox',
   equippedItem: 'none',
   ownedEquipment: ['none'],
   level: 1,
-  xp: 120,
-  coins: 80,
-  gems: 6,
-  streak: 1,
-  lastPlayedDay: getTodayKey(),
-  checkedInDays: [getTodayKey()],
+  xp: 0,
+  coins: 0,
+  gems: 0,
+  streak: 0,
+  lastPlayedDay: '',
+  checkedInDays: [],
   boosters: {
     xpBoostSessionsLeft: 0,
     hasStreakShield: false,
     hasRadarActive: false,
   },
-  weekXp: 120,
+  weekXp: 0,
   weekStart: getMondayKey(),
-  totalMessCleared: 34,
-  roomsCompleted: 1,
-  monstersBeaten: 4,
-  dailyQuestCount: 1,
+  totalMessCleared: 0,
+  roomsCompleted: 0,
+  monstersBeaten: 0,
+  dailyQuestCount: 0,
   dailyQuestDay: getTodayKey(),
-  bestTimeSeconds: 420,
+  bestTimeSeconds: 0,
   theme: 'dark',
   soundEnabled: true,
   hapticsEnabled: true,
   hasCompletedOnboarding: false,
-  history: [
-    {
-      id: 'demo-session-init',
-      date: new Date(Date.now() - 86400000).toISOString(),
-      roomType: 'bedroom',
-      messBefore: 68,
-      messAfter: 34,
-      improvement: 34,
-      grade: 'A',
-      durationSeconds: 420,
-      xpEarned: 120,
-      coinsEarned: 60,
-      gemsEarned: 2,
-      commentary: 'Clothing pile eliminated and bedside surface restored. Acceptable execution.',
-      isFallback: false,
-      monstersCount: 4,
-    },
-  ],
+  history: [],
   apiTelemetry: {
-    calls: 2,
+    calls: 0,
     fallbackCount: 0,
   },
 };
@@ -111,18 +95,30 @@ const DEFAULT_PROFILE: UserProfile = {
 export default function App() {
   const [profile, setProfile] = useState<UserProfile>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      let saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) {
+        saved = localStorage.getItem('pq.profile.v3');
+      }
       if (saved) {
         const parsed = JSON.parse(saved);
-        return {
-          ...DEFAULT_PROFILE,
-          ...parsed,
-          boosters: {
-            ...DEFAULT_PROFILE.boosters,
-            ...(parsed.boosters || {}),
-          },
-          checkedInDays: parsed.checkedInDays || [getTodayKey()],
-        };
+        // Scrub any legacy mock/demo logs
+        const cleanHistory = (parsed.history || []).filter(
+          (h: SessionRecord) => h.id !== 'demo-session-init'
+        );
+        const isOnboarded = Boolean(parsed.hasCompletedOnboarding && parsed.displayName?.trim());
+
+        if (isOnboarded) {
+          return {
+            ...DEFAULT_PROFILE,
+            ...parsed,
+            history: cleanHistory,
+            boosters: {
+              ...DEFAULT_PROFILE.boosters,
+              ...(parsed.boosters || {}),
+            },
+            checkedInDays: parsed.checkedInDays || [],
+          };
+        }
       }
     } catch (e) {
       console.warn('Storage unavailable, using defaults');
@@ -131,7 +127,7 @@ export default function App() {
   });
 
   const [screen, setScreen] = useState<AppScreen>(() => {
-    return profile.hasCompletedOnboarding ? 'home' : 'welcome';
+    return profile.hasCompletedOnboarding && profile.displayName.trim() ? 'home' : 'welcome';
   });
 
   // Active Quest State
@@ -323,6 +319,17 @@ export default function App() {
         ...prev,
         gems: prev.gems - 3,
         boosters: { ...prev.boosters, hasRadarActive: true },
+      };
+    });
+  };
+
+  const handleReviveStreak = () => {
+    setProfile((prev) => {
+      if (prev.gems < 6) return prev;
+      return {
+        ...prev,
+        gems: prev.gems - 6,
+        streak: prev.streak + 3,
       };
     });
   };
@@ -635,9 +642,40 @@ export default function App() {
     });
   };
 
+  const handleOnboardingComplete = (newProfile: {
+    id: string;
+    displayName: string;
+    email?: string;
+    avatar: AvatarType;
+  }) => {
+    setProfile((prev) => {
+      const initialized: UserProfile = {
+        ...DEFAULT_PROFILE,
+        id: newProfile.id,
+        displayName: newProfile.displayName,
+        email: newProfile.email,
+        avatar: newProfile.avatar,
+        theme: prev.theme,
+        soundEnabled: prev.soundEnabled,
+        hapticsEnabled: prev.hapticsEnabled,
+        hasCompletedOnboarding: true,
+      };
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(initialized));
+      } catch (e) {
+        console.warn('LocalStorage save error:', e);
+      }
+      return initialized;
+    });
+    setScreen('home');
+  };
+
+  const isUnregistered = !profile.hasCompletedOnboarding || !profile.displayName?.trim();
+  const showChrome = !isUnregistered && screen !== 'welcome' && screen !== 'onboarding';
+
   return (
     <div className="min-h-[100dvh] flex flex-col justify-between bg-app text-main transition-colors">
-      {screen !== 'welcome' && (
+      {showChrome && (
         <TopHeader
           profile={profile}
           currentScreen={screen}
@@ -651,150 +689,176 @@ export default function App() {
       )}
 
       <main className="flex-1">
-        {screen === 'welcome' && (
-          <WelcomeView
-            onStart={() => {
-              setProfile((p) => ({ ...p, hasCompletedOnboarding: true }));
-              setScreen('home');
-            }}
-            hapticsEnabled={profile.hapticsEnabled}
-          />
-        )}
+        {isUnregistered ? (
+          screen === 'welcome' ? (
+            <WelcomeView
+              onStart={() => setScreen('onboarding')}
+              hapticsEnabled={profile.hapticsEnabled}
+            />
+          ) : (
+            <OnboardingGateView
+              onComplete={handleOnboardingComplete}
+              onBack={() => setScreen('welcome')}
+              hapticsEnabled={profile.hapticsEnabled}
+              soundEnabled={profile.soundEnabled}
+            />
+          )
+        ) : (
+          <>
+            {screen === 'welcome' && (
+              <WelcomeView
+                onStart={() => setScreen('home')}
+                hapticsEnabled={profile.hapticsEnabled}
+              />
+            )}
 
-        {screen === 'home' && (
-          <HomeView
-            profile={profile}
-            onStartQuest={() => handleStartQuest(false)}
-            onOpenDuel={() => setScreen('duel')}
-            onViewHistory={() => setScreen('history')}
-            onCheckInToday={handleCheckInToday}
-            onOpenGemVault={() => setIsGemVaultOpen(true)}
-          />
-        )}
+            {screen === 'onboarding' && (
+              <OnboardingGateView
+                onComplete={handleOnboardingComplete}
+                onBack={() => setScreen('home')}
+                hapticsEnabled={profile.hapticsEnabled}
+                soundEnabled={profile.soundEnabled}
+              />
+            )}
 
-        {screen === 'scan' && (
-          <ScanView imagePreviewUrl={beforeImage} isFallback={isFallbackMode} />
-        )}
+            {screen === 'home' && (
+              <HomeView
+                profile={profile}
+                onStartQuest={() => handleStartQuest(false)}
+                onOpenDuel={() => setScreen('duel')}
+                onViewHistory={() => setScreen('history')}
+                onCheckInToday={handleCheckInToday}
+                onOpenGemVault={() => setIsGemVaultOpen(true)}
+              />
+            )}
 
-        {screen === 'quest' && (
-          <QuestView
-            roomImage={beforeImage}
-            roomType={roomType}
-            monsters={monsters}
-            commentary={commentary}
-            onTaskToggle={handleTaskToggle}
-            onProceedToVerify={handleProceedToVerify}
-            soundEnabled={profile.soundEnabled}
-            hapticsEnabled={profile.hapticsEnabled}
-            totalDurationSeconds={sessionDuration}
-            xpMultiplierBonus={profile.boosters.xpBoostSessionsLeft > 0 ? 2 : 1}
-          />
-        )}
+            {screen === 'scan' && (
+              <ScanView imagePreviewUrl={beforeImage} isFallback={isFallbackMode} />
+            )}
 
-        {screen === 'verify' && (
-          <VerifyView beforeImage={beforeImage} afterImage={afterImage} />
-        )}
+            {screen === 'quest' && (
+              <QuestView
+                roomImage={beforeImage}
+                roomType={roomType}
+                monsters={monsters}
+                commentary={commentary}
+                onTaskToggle={handleTaskToggle}
+                onProceedToVerify={handleProceedToVerify}
+                soundEnabled={profile.soundEnabled}
+                hapticsEnabled={profile.hapticsEnabled}
+                totalDurationSeconds={sessionDuration}
+                xpMultiplierBonus={profile.boosters.xpBoostSessionsLeft > 0 ? 2 : 1}
+              />
+            )}
 
-        {screen === 'result_pass' && (
-          <ResultPassView
-            grade={grade}
-            beforeImage={beforeImage}
-            afterImage={afterImage}
-            messBefore={messBefore}
-            messAfter={messAfter}
-            improvement={improvement}
-            durationSeconds={sessionDuration}
-            xpEarned={Math.round((earnedXpTotal + 50 + (sessionDuration < 600 ? 30 : 0) + (isDuelRace ? 40 : 0)) * (profile.boosters.xpBoostSessionsLeft > 0 ? 2 : 1))}
-            coinsEarned={Math.round((earnedXpTotal + 50) * 0.5)}
-            gemsEarned={grade === 'S' ? 3 : grade === 'A' ? 2 : 1}
-            lootDrop={lootDropped}
-            isFallback={isFallbackMode}
-            fallbackError={fallbackErrorMessage}
-            commentary={commentary}
-            soundEnabled={profile.soundEnabled}
-            hapticsEnabled={profile.hapticsEnabled}
-            onDone={() => setScreen('home')}
-            onOpenLocker={() => setScreen('locker')}
-          />
-        )}
+            {screen === 'verify' && (
+              <VerifyView beforeImage={beforeImage} afterImage={afterImage} />
+            )}
 
-        {screen === 'result_fail' && (
-          <ResultFailView
-            beforeImage={beforeImage}
-            afterImage={afterImage}
-            messBefore={messBefore}
-            messAfter={messAfter}
-            improvement={improvement}
-            commentary={commentary}
-            remaining={remainingClutter}
-            onRetryPhoto={() => setCameraMode('verify_after')}
-            onAbandon={() => setScreen('home')}
-            soundEnabled={profile.soundEnabled}
-            hapticsEnabled={profile.hapticsEnabled}
-          />
-        )}
+            {screen === 'result_pass' && (
+              <ResultPassView
+                grade={grade}
+                beforeImage={beforeImage}
+                afterImage={afterImage}
+                messBefore={messBefore}
+                messAfter={messAfter}
+                improvement={improvement}
+                durationSeconds={sessionDuration}
+                xpEarned={Math.round((earnedXpTotal + 50 + (sessionDuration < 600 ? 30 : 0) + (isDuelRace ? 40 : 0)) * (profile.boosters.xpBoostSessionsLeft > 0 ? 2 : 1))}
+                coinsEarned={Math.round((earnedXpTotal + 50) * 0.5)}
+                gemsEarned={grade === 'S' ? 3 : grade === 'A' ? 2 : 1}
+                lootDrop={lootDropped}
+                isFallback={isFallbackMode}
+                fallbackError={fallbackErrorMessage}
+                commentary={commentary}
+                soundEnabled={profile.soundEnabled}
+                hapticsEnabled={profile.hapticsEnabled}
+                onDone={() => setScreen('home')}
+                onOpenLocker={() => setScreen('locker')}
+              />
+            )}
 
-        {screen === 'history' && (
-          <HistoryView
-            history={profile.history}
-            totalMessCleared={profile.totalMessCleared}
-            onBack={() => setScreen('home')}
-            hapticsEnabled={profile.hapticsEnabled}
-          />
-        )}
+            {screen === 'result_fail' && (
+              <ResultFailView
+                beforeImage={beforeImage}
+                afterImage={afterImage}
+                messBefore={messBefore}
+                messAfter={messAfter}
+                improvement={improvement}
+                commentary={commentary}
+                remaining={remainingClutter}
+                onRetryPhoto={() => setCameraMode('verify_after')}
+                onAbandon={() => setScreen('home')}
+                soundEnabled={profile.soundEnabled}
+                hapticsEnabled={profile.hapticsEnabled}
+              />
+            )}
 
-        {screen === 'league' && (
-          <LeagueView
-            profile={profile}
-            onOpenAuth={() => setIsAuthOpen(true)}
-          />
-        )}
+            {screen === 'history' && (
+              <HistoryView
+                history={profile.history}
+                totalMessCleared={profile.totalMessCleared}
+                onBack={() => setScreen('home')}
+                hapticsEnabled={profile.hapticsEnabled}
+              />
+            )}
 
-        {screen === 'locker' && (
-          <LockerView
-            profile={profile}
-            onEquipItem={(id) => setProfile((p) => ({ ...p, equippedItem: id }))}
-            onBuyItem={(id, cost) => {
-              setProfile((p) => ({
-                ...p,
-                coins: p.coins - cost,
-                ownedEquipment: [...p.ownedEquipment, id],
-                equippedItem: id,
-              }));
-            }}
-            onOpenGemVault={() => setIsGemVaultOpen(true)}
-          />
-        )}
+            {screen === 'league' && (
+              <LeagueView
+                profile={profile}
+                onOpenAuth={() => setIsAuthOpen(true)}
+              />
+            )}
 
-        {screen === 'profile' && (
-          <ProfileView
-            profile={profile}
-            onUpdateAvatar={(avatar) => setProfile((p) => ({ ...p, avatar }))}
-            onOpenSettings={() => setIsSettingsOpen(true)}
-            onOpenAuth={() => setIsAuthOpen(true)}
-            onOpenGemVault={() => setIsGemVaultOpen(true)}
-          />
-        )}
+            {screen === 'locker' && (
+              <LockerView
+                profile={profile}
+                onEquipItem={(id) => setProfile((p) => ({ ...p, equippedItem: id }))}
+                onBuyItem={(id, cost) => {
+                  setProfile((p) => ({
+                    ...p,
+                    coins: p.coins - cost,
+                    ownedEquipment: [...p.ownedEquipment, id],
+                    equippedItem: id,
+                  }));
+                }}
+                onOpenGemVault={() => setIsGemVaultOpen(true)}
+              />
+            )}
 
-        {screen === 'duel' && (
-          <DuelView
-            profile={profile}
-            onStartCleaningDuel={() => handleStartQuest(true)}
-            onBack={() => setScreen('home')}
-          />
+            {screen === 'profile' && (
+              <ProfileView
+                profile={profile}
+                onUpdateAvatar={(avatar) => setProfile((p) => ({ ...p, avatar }))}
+                onOpenSettings={() => setIsSettingsOpen(true)}
+                onOpenAuth={() => setIsAuthOpen(true)}
+                onOpenGemVault={() => setIsGemVaultOpen(true)}
+              />
+            )}
+
+            {screen === 'duel' && (
+              <DuelView
+                profile={profile}
+                onStartCleaningDuel={() => handleStartQuest(true)}
+                onBack={() => setScreen('home')}
+              />
+            )}
+          </>
         )}
       </main>
 
-      <BottomNav
-        currentScreen={screen}
-        onNavigate={(s) => setScreen(s)}
-        profile={profile}
-        onOpenSettings={() => setIsSettingsOpen(true)}
-        onOpenGemVault={() => setIsGemVaultOpen(true)}
-        onToggleTheme={() => {
-          setProfile((p) => ({ ...p, theme: p.theme === 'dark' ? 'light' : 'dark' }));
-        }}
-      />
+      {showChrome && (
+        <BottomNav
+          currentScreen={screen}
+          onNavigate={(s) => setScreen(s)}
+          profile={profile}
+          onOpenSettings={() => setIsSettingsOpen(true)}
+          onOpenGemVault={() => setIsGemVaultOpen(true)}
+          onToggleTheme={() => {
+            setProfile((p) => ({ ...p, theme: p.theme === 'dark' ? 'light' : 'dark' }));
+          }}
+        />
+      )}
 
       {cameraMode !== 'none' && (
         <CameraCapture
@@ -845,6 +909,12 @@ export default function App() {
         onUpdateProfile={(updated) => setProfile((p) => ({ ...p, ...updated }))}
         onOpenAuth={() => setIsAuthOpen(true)}
         onResetData={() => {
+          try {
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem('pq.profile.v3');
+          } catch (e) {
+            console.warn('LocalStorage clear error:', e);
+          }
           setProfile(DEFAULT_PROFILE);
           setScreen('welcome');
         }}
@@ -859,6 +929,7 @@ export default function App() {
         onActivateXpBoost={handleActivateXpBoost}
         onTransmuteCoins={handleTransmuteCoins}
         onActivateRadar={handleActivateRadar}
+        onReviveStreak={handleReviveStreak}
         hapticsEnabled={profile.hapticsEnabled}
         soundEnabled={profile.soundEnabled}
       />

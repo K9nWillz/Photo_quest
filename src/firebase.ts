@@ -2,6 +2,7 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import {
   getAuth,
   signInWithPopup,
+  signInAnonymously,
   GoogleAuthProvider,
   signOut as firebaseSignOut,
   onAuthStateChanged,
@@ -116,11 +117,96 @@ export async function signInWithGoogle(): Promise<FirebaseUser | null> {
   }
 }
 
+// Anonymous sign-in for guests
+export async function signInAnonymouslyUser(): Promise<FirebaseUser | null> {
+  try {
+    const cred = await signInAnonymously(auth);
+    return cred.user;
+  } catch (err: unknown) {
+    console.warn('Anonymous sign-in unavailable or disabled:', err);
+    return null;
+  }
+}
+
 export async function signOutUser(): Promise<void> {
   try {
     await firebaseSignOut(auth);
   } catch (err) {
     console.warn('Sign out notice:', err);
+  }
+}
+
+// Save complete user profile to Firestore database
+export async function saveUserProfileToFirestore(profile: {
+  id: string;
+  displayName: string;
+  avatar: string;
+  equippedItem?: string;
+  level: number;
+  xp: number;
+  weekXp: number;
+  coins: number;
+  gems: number;
+  streak: number;
+  roomsCompleted: number;
+  totalMessCleared: number;
+}): Promise<{ success: boolean; uid: string }> {
+  let currentUid = auth.currentUser?.uid;
+  if (!currentUid) {
+    try {
+      const anon = await signInAnonymously(auth);
+      currentUid = anon.user.uid;
+    } catch (e) {
+      console.warn('Anonymous sign-in on save fallback:', e);
+    }
+  }
+
+  const targetId = currentUid || profile.id;
+
+  try {
+    const savePromise = Promise.all([
+      setDoc(
+        doc(db, 'users', targetId),
+        {
+          id: targetId,
+          displayName: profile.displayName,
+          avatar: profile.avatar,
+          equippedItem: profile.equippedItem || 'none',
+          level: Number(profile.level) || 1,
+          xp: Number(profile.xp) || 0,
+          coins: Number(profile.coins) || 0,
+          gems: Number(profile.gems) || 0,
+          streak: Number(profile.streak) || 0,
+          sessionsCount: Number(profile.roomsCompleted) || 0,
+          totalMessCleared: Number(profile.totalMessCleared) || 0,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      ),
+      setDoc(
+        doc(db, 'leaderboard', targetId),
+        {
+          id: targetId,
+          userId: currentUid || targetId,
+          displayName: profile.displayName,
+          avatar: profile.avatar,
+          equippedItem: profile.equippedItem || 'none',
+          weekXp: Number(profile.weekXp) || 0,
+          totalXp: Number(profile.xp) || 0,
+          streak: Number(profile.streak) || 0,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      ),
+    ]);
+
+    // Give Firestore up to 3.5 seconds so UI is never stuck on slow networks
+    const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 3500));
+    await Promise.race([savePromise, timeoutPromise]);
+    return { success: true, uid: targetId };
+  } catch (err) {
+    console.warn('Database save deferred or restricted:', err);
+    return { success: false, uid: targetId };
   }
 }
 

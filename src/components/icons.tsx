@@ -45,6 +45,15 @@ export const CheckCircleIcon: React.FC<IconProps> = ({ size = 20, className = ''
   </svg>
 );
 
+export const CalendarIcon: React.FC<IconProps> = ({ size = 20, className = '', ...props }) => (
+  <svg {...baseProps(size, className)} {...props}>
+    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+    <line x1="16" y1="2" x2="16" y2="6" />
+    <line x1="8" y1="2" x2="8" y2="6" />
+    <line x1="3" y1="10" x2="21" y2="10" />
+  </svg>
+);
+
 export const FlameIcon: React.FC<IconProps> = ({ size = 20, className = '', ...props }) => (
   <svg {...baseProps(size, className)} {...props}>
     <path d="M8.5 14.5A2.5 2.5 0 0 0 11 17c1.38 0 2.5-1.12 2.5-2.5 0-1.63-1.5-2.8-2.5-4.5-1 1.7-2.5 2.87-2.5 4.5z" />

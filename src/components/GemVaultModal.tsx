@@ -1,6 +1,6 @@
 import React from 'react';
 import { UserProfile } from '../types';
-import { GemIcon, ShieldIcon, ZapIcon, CoinIcon, SparklesIcon, CrossIcon, CheckIcon } from './icons';
+import { GemIcon, ShieldIcon, ZapIcon, CoinIcon, SparklesIcon, CrossIcon, CheckIcon, FlameIcon } from './icons';
 import { triggerHaptic, playTaskCompleteTone } from '../utils/audio';
 
 interface GemVaultModalProps {
@@ -11,6 +11,7 @@ interface GemVaultModalProps {
   onActivateXpBoost: () => void;
   onTransmuteCoins: () => void;
   onActivateRadar: () => void;
+  onReviveStreak?: () => void;
   hapticsEnabled: boolean;
   soundEnabled: boolean;
 }
@@ -23,6 +24,7 @@ export const GemVaultModal: React.FC<GemVaultModalProps> = ({
   onActivateXpBoost,
   onTransmuteCoins,
   onActivateRadar,
+  onReviveStreak,
   hapticsEnabled,
   soundEnabled,
 }) => {
@@ -210,6 +212,36 @@ export const GemVaultModal: React.FC<GemVaultModalProps> = ({
               {profile.boosters.hasRadarActive ? 'Armed' : '3 Gems'}
             </button>
           </div>
+
+          {/* Phoenix Streak Elixir */}
+          {onReviveStreak && (
+            <div className="p-3.5 rounded-2xl border border-theme bg-card-subtle flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-500 shrink-0">
+                  <FlameIcon size={20} />
+                </div>
+                <div>
+                  <h4 className="text-xs font-semibold text-main">Phoenix Streak Elixir</h4>
+                  <p className="text-[11px] text-sub mt-0.5">
+                    Infuses +3 bonus days directly into your active cleaning streak
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                disabled={profile.gems < 6}
+                onClick={() => handlePurchase(6, onReviveStreak)}
+                className={`px-3 py-1.5 rounded-xl font-mono text-xs font-semibold shrink-0 transition-all ${
+                  profile.gems >= 6
+                    ? 'bg-amber-500 hover:bg-amber-400 text-black shadow-md cursor-pointer'
+                    : 'bg-card-subtle border border-theme text-dim cursor-not-allowed'
+                }`}
+              >
+                6 Gems
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
