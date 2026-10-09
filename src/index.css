@@ -1,0 +1,181 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-serif: 'Instrument Serif', Georgia, serif;
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    
+    /* Dark Mode Defaults */
+    --bg-base: #0d0d14;
+    --bg-surface: #161622;
+    --bg-surface-elevated: #1e1e2f;
+    --bg-surface-subtle: rgba(255, 255, 255, 0.04);
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-medium: rgba(255, 255, 255, 0.16);
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+
+    /* Lime Green Account Theme */
+    --account-lime: #84cc16;
+    --account-lime-light: #a3e635;
+    --account-lime-bg: rgba(132, 204, 22, 0.15);
+    --account-lime-border: rgba(132, 204, 22, 0.35);
+
+    /* Accents */
+    --accent-violet: #8b5cf6;
+    --accent-gold: #f59e0b;
+    --accent-rose: #f43f5e;
+    --accent-mint: #10b981;
+    --accent-sky: #0284c7;
+  }
+
+  .theme-light {
+    /* Refined Editorial Light Mode */
+    --bg-base: #f8f7f4;
+    --bg-surface: #ffffff;
+    --bg-surface-elevated: #f0eee9;
+    --bg-surface-subtle: rgba(0, 0, 0, 0.03);
+    --border-subtle: rgba(0, 0, 0, 0.08);
+    --border-medium: rgba(0, 0, 0, 0.15);
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+
+    /* Lime Green Account Theme (WCAG AA Compliant on Light) */
+    --account-lime: #4d7c0f;
+    --account-lime-light: #65a30d;
+    --account-lime-bg: rgba(101, 163, 13, 0.12);
+    --account-lime-border: rgba(101, 163, 13, 0.3);
+
+    /* Light Theme Accents */
+    --accent-violet: #7c3aed;
+    --accent-gold: #d97706;
+    --accent-rose: #e11d48;
+    --accent-mint: #059669;
+    --accent-sky: #0369a1;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    min-height: 100dvh;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+
+  h1, h2, h3, .font-display {
+    font-family: var(--font-serif);
+  }
+
+  .font-numbers, code, pre, .font-mono {
+    font-family: var(--font-mono);
+    font-feature-settings: "tnum" 1;
+  }
+}
+
+/* Semantic Theme Helpers */
+.bg-app {
+  background-color: var(--bg-base);
+}
+
+.bg-card {
+  background-color: var(--bg-surface);
+}
+
+.bg-card-elevated {
+  background-color: var(--bg-surface-elevated);
+}
+
+.bg-card-subtle {
+  background-color: var(--bg-surface-subtle);
+}
+
+.text-main {
+  color: var(--text-primary);
+}
+
+.text-sub {
+  color: var(--text-secondary);
+}
+
+.text-dim {
+  color: var(--text-muted);
+}
+
+.border-theme {
+  border-color: var(--border-subtle);
+}
+
+.border-theme-med {
+  border-color: var(--border-medium);
+}
+
+/* Account Lime Green Utilities */
+.text-account {
+  color: var(--account-lime);
+}
+
+.bg-account {
+  background-color: var(--account-lime-bg);
+}
+
+.border-account {
+  border-color: var(--account-lime-border);
+}
+
+/* Scanline Sweep Animations */
+@keyframes scanlineSweep {
+  0% {
+    top: 0%;
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    top: 100%;
+    opacity: 0.8;
+  }
+}
+
+.animate-scanline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.9), transparent);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.8);
+  animation: scanlineSweep 1.8s linear infinite;
+  pointer-events: none;
+}
+
+.animate-scanline-violet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.9), transparent);
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.8);
+  animation: scanlineSweep 1.8s linear infinite;
+  pointer-events: none;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(140, 140, 160, 0.25);
+  border-radius: 9999px;
+}
+.theme-light ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+}

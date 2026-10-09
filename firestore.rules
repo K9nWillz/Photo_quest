@@ -1,0 +1,97 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null && request.auth.uid != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidUserProfile(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.displayName is string && data.displayName.size() > 0 && data.displayName.size() <= 64 &&
+             data.avatar is string && data.avatar.size() <= 32 &&
+             data.level is number && data.level >= 1 &&
+             data.xp is number && data.xp >= 0 &&
+             data.coins is number && data.coins >= 0 &&
+             data.gems is number && data.gems >= 0 &&
+             data.streak is number && data.streak >= 0;
+    }
+
+    function isValidLeaderboardEntry(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.userId is string && data.userId.size() <= 128 &&
+             data.displayName is string && data.displayName.size() > 0 && data.displayName.size() <= 64 &&
+             data.avatar is string && data.avatar.size() <= 32 &&
+             data.weekXp is number && data.weekXp >= 0 &&
+             data.totalXp is number && data.totalXp >= 0 &&
+             data.streak is number && data.streak >= 0;
+    }
+
+    function isValidSessionRecord(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.userId is string && data.userId.size() <= 128 &&
+             data.roomType is string && data.roomType.size() <= 32 &&
+             data.messBefore is number &&
+             data.messAfter is number &&
+             data.improvement is number &&
+             data.grade is string && data.grade.size() <= 8 &&
+             data.durationSeconds is number && data.durationSeconds >= 0 &&
+             data.xpEarned is number && data.xpEarned >= 0;
+    }
+
+    // User profile: owner access only for mutations, read by authenticated users
+    match /users/{userId} {
+      allow get, list: if isSignedIn();
+      allow create: if isOwner(userId) && isValidId(userId) &&
+                       isValidUserProfile(incoming()) &&
+                       incoming().id == userId;
+      allow update: if isOwner(userId) && isValidId(userId) &&
+                       isValidUserProfile(incoming()) &&
+                       incoming().id == existing().id;
+      allow delete: if isOwner(userId);
+    }
+
+    // Leaderboard entries: publicly viewable, updated only by entry owner
+    match /leaderboard/{entryId} {
+      allow get, list: if true;
+      allow create: if isSignedIn() && isValidId(entryId) &&
+                       isValidLeaderboardEntry(incoming()) &&
+                       incoming().userId == request.auth.uid;
+      allow update: if isSignedIn() && isValidId(entryId) &&
+                       isValidLeaderboardEntry(incoming()) &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().userId == existing().userId;
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+
+    // Session audit logs: private to user, immutable once created
+    match /sessions/{sessionId} {
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(sessionId) &&
+                       isValidSessionRecord(incoming()) &&
+                       incoming().userId == request.auth.uid;
+      allow update, delete: if false;
+    }
+  }
+}

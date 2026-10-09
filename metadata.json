@@ -1,0 +1,10 @@
+{
+  "name": "Photo Quest",
+  "description": "Mobile-first cleaning RPG with verified AI before/after mess analysis and real-time leagues.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

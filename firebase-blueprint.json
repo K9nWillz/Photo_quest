@@ -1,0 +1,79 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile with cleaning stats, XP, level, currency, and equipped cosmetics",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "displayName": { "type": "string", "maxLength": 64 },
+        "avatar": { "type": "string", "enum": ["fox", "owl", "whale", "cactus", "comet", "lotus", "geode", "ember", "frost", "moss"] },
+        "equippedItem": { "type": "string", "enum": ["none", "cap", "shades", "tophat", "headset", "helmet", "crown"] },
+        "level": { "type": "number" },
+        "xp": { "type": "number" },
+        "weekXp": { "type": "number" },
+        "coins": { "type": "number" },
+        "gems": { "type": "number" },
+        "streak": { "type": "number" },
+        "sessionsCount": { "type": "number" },
+        "totalMessCleared": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "displayName", "avatar", "level", "xp", "coins", "gems", "streak"]
+    },
+    "LeaderboardEntry": {
+      "title": "LeaderboardEntry",
+      "description": "Aggregated leaderboard scores for weekly and all-time rankings",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "displayName": { "type": "string", "maxLength": 64 },
+        "avatar": { "type": "string", "enum": ["fox", "owl", "whale", "cactus", "comet", "lotus", "geode", "ember", "frost", "moss"] },
+        "equippedItem": { "type": "string", "enum": ["none", "cap", "shades", "tophat", "headset", "helmet", "crown"] },
+        "weekXp": { "type": "number" },
+        "totalXp": { "type": "number" },
+        "gradeCountS": { "type": "number" },
+        "streak": { "type": "number" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "displayName", "avatar", "weekXp", "totalXp", "streak"]
+    },
+    "SessionRecord": {
+      "title": "SessionRecord",
+      "description": "Verified before and after cleaning session report",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "roomType": { "type": "string", "enum": ["bedroom", "kitchen", "bathroom", "living_room", "office", "other"] },
+        "messBefore": { "type": "number" },
+        "messAfter": { "type": "number" },
+        "improvement": { "type": "number" },
+        "grade": { "type": "string", "enum": ["S", "A", "B", "C", "FAIL"] },
+        "durationSeconds": { "type": "number" },
+        "xpEarned": { "type": "number" },
+        "monstersCount": { "type": "number" },
+        "commentary": { "type": "string", "maxLength": 500 },
+        "isFallback": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "roomType", "messBefore", "messAfter", "improvement", "grade", "durationSeconds", "xpEarned"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Individual user profile containing state, currency, and progression."
+    },
+    "/leaderboard/{entryId}": {
+      "schema": "LeaderboardEntry",
+      "description": "Public league rankings for weekly and all-time scores."
+    },
+    "/sessions/{sessionId}": {
+      "schema": "SessionRecord",
+      "description": "Historical log of verified clean sessions for telemetry and streak audit."
+    }
+  }
+}
